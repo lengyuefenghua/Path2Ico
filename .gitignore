@@ -1,0 +1,23 @@
+# Build results
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+output/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userprefs
+
+# ReSharper
+_ReSharper*/
+*.DotSettings.user
+
+# NuGet
+*.nupkg
+packages/
+
+# OS
+Thumbs.db
+.DS_Store
