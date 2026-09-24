@@ -6,6 +6,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using Path2Ico.Services;
 
 namespace Path2Ico
@@ -19,17 +20,14 @@ namespace Path2Ico
             "M 50,5 L 61,38 L 95,38 L 67,59 L 78,92 L 50,71 L 22,92 L 33,59 L 5,38 L 39,38 Z";
 
         private bool _ready;
-        private CheckBox[] _outputSizeBoxes;
         private CheckBox[] _icoSizeBoxes;
 
         public MainWindow()
         {
             InitializeComponent();
 
-            _outputSizeBoxes = new[] { Size16, Size20, Size24, Size32, Size40, Size48, Size64, Size96, Size128, Size256 };
             _icoSizeBoxes = new[] { Ico16, Ico20, Ico24, Ico32, Ico40, Ico48, Ico64, Ico96, Ico128, Ico256 };
 
-            OutputDirTextBox.Text = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
             PathTextBox.Text = SamplePath;
 
             _ready = true;
@@ -56,46 +54,44 @@ namespace Path2Ico
             PathTextBox.Clear();
         }
 
-        private void OnBrowseClick(object sender, RoutedEventArgs e)
-        {
-            using (var dialog = new System.Windows.Forms.FolderBrowserDialog())
-            {
-                dialog.Description = "选择输出目录";
-                dialog.ShowNewFolderButton = true;
-                if (!string.IsNullOrWhiteSpace(OutputDirTextBox.Text) && Directory.Exists(OutputDirTextBox.Text))
-                {
-                    dialog.SelectedPath = OutputDirTextBox.Text;
-                }
-                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                {
-                    OutputDirTextBox.Text = dialog.SelectedPath;
-                }
-            }
-        }
-
         private void RefreshPreview()
         {
             if (!_ready) return;
 
-            Geometry geometry = BuildGeometry();
-            if (geometry == null)
-            {
-                PreviewImage.Source = null;
-                SetLog(string.IsNullOrWhiteSpace(PathTextBox.Text)
-                    ? "请输入路径数据。"
-                    : "路径解析失败，请检查语法。");
-                return;
-            }
+            string text = PathTextBox.Text;
+            bool isXaml = XamlIconRenderer.LooksLikeXaml(text);
 
             try
             {
-                PreviewImage.Source = PathRenderer.Render(geometry, PreviewSize, BuildSettings(Colors.Transparent));
-                SetLog("预览已更新。");
+                BitmapSource preview;
+                string message;
+                if (isXaml)
+                {
+                    preview = XamlIconRenderer.Render(text, PreviewSize, BuildSettings(Colors.Transparent));
+                    message = "预览已更新（XAML 模式，填充/描边/留白设置已忽略）。";
+                }
+                else
+                {
+                    Geometry geometry = BuildGeometry();
+                    if (geometry == null)
+                    {
+                        PreviewImage.Source = null;
+                        SetLog(string.IsNullOrWhiteSpace(text)
+                            ? "请输入路径数据。"
+                            : "路径解析失败，请检查语法。");
+                        return;
+                    }
+                    preview = PathRenderer.Render(geometry, PreviewSize, BuildSettings(Colors.Transparent));
+                    message = "预览已更新。";
+                }
+
+                PreviewImage.Source = preview;
+                SetLog(message);
             }
             catch (Exception ex)
             {
                 PreviewImage.Source = null;
-                SetLog("预览失败：" + ex.Message);
+                SetLog((isXaml ? "XAML 解析失败：" : "预览失败：") + ex.Message);
             }
         }
 
@@ -103,107 +99,76 @@ namespace Path2Ico
         {
             if (!_ready) return;
 
-            Geometry geometry = BuildGeometry();
-            if (geometry == null)
-            {
-                SetLog("路径解析失败，无法生成。");
-                return;
-            }
+            string text = PathTextBox.Text;
+            bool isXaml = XamlIconRenderer.LooksLikeXaml(text);
 
-            string directory = OutputDirTextBox.Text.Trim();
-            if (directory.Length == 0)
+            Geometry geometry = null;
+            if (!isXaml)
             {
-                SetLog("请先选择输出目录。");
-                return;
-            }
-            try
-            {
-                Directory.CreateDirectory(directory);
-            }
-            catch (Exception ex)
-            {
-                SetLog("无法创建输出目录：" + ex.Message);
-                return;
-            }
-
-            string baseName = BaseNameTextBox.Text.Trim();
-            if (baseName.Length == 0)
-            {
-                SetLog("请输入文件名。");
-                return;
-            }
-            if (baseName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
-            {
-                SetLog("文件名包含非法字符。");
-                return;
-            }
-
-            List<int> outputSizes = GetSizes(_outputSizeBoxes).ToList();
-            bool exportPng = FormatPng.IsChecked == true;
-            bool exportJpg = FormatJpg.IsChecked == true;
-            bool exportIco = FormatIco.IsChecked == true;
-
-            if (!exportPng && !exportJpg && !exportIco)
-            {
-                SetLog("请至少选择一种输出格式。");
-                return;
-            }
-            if (outputSizes.Count == 0)
-            {
-                SetLog("请至少选择一个输出尺寸。");
-                return;
-            }
-
-            RenderSettings transparent = BuildSettings(Colors.Transparent);
-            RenderSettings white = BuildSettings(Colors.White);
-            var lines = new List<string>();
-            int generated = 0;
-
-            try
-            {
-                foreach (int size in outputSizes)
+                geometry = BuildGeometry();
+                if (geometry == null)
                 {
-                    if (exportPng)
-                    {
-                        string path = Path.Combine(directory, baseName + "_" + size + ".png");
-                        ImageExporter.SavePng(PathRenderer.Render(geometry, size, transparent), path);
-                        lines.Add(Path.GetFileName(path));
-                        generated++;
-                    }
-                    if (exportJpg)
-                    {
-                        string path = Path.Combine(directory, baseName + "_" + size + ".jpg");
-                        ImageExporter.SaveJpeg(PathRenderer.Render(geometry, size, white), path, JpegQuality);
-                        lines.Add(Path.GetFileName(path));
-                        generated++;
-                    }
+                    SetLog("路径解析失败，无法生成。");
+                    return;
                 }
+            }
 
-                if (exportIco)
+            var dialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Title = "保存图标",
+                Filter = "PNG 图片 (*.png)|*.png|JPEG 图片 (*.jpg)|*.jpg|图标文件 (*.ico)|*.ico",
+                OverwritePrompt = true
+            };
+
+            if (dialog.ShowDialog(this) != true) return;
+
+            string path = dialog.FileName;
+            string extension = Path.GetExtension(path).ToLowerInvariant();
+
+            Func<int, Color, BitmapSource> render = (size, background) =>
+            {
+                RenderSettings settings = BuildSettings(background);
+                return isXaml
+                    ? XamlIconRenderer.Render(text, size, settings)
+                    : PathRenderer.Render(geometry, size, settings);
+            };
+
+            try
+            {
+                if (extension == ".png")
+                {
+                    int size = GetOutputSize();
+                    ImageExporter.SavePng(render(size, Colors.Transparent), path);
+                    SetLog("已保存 PNG（" + size + "）：\r\n" + path);
+                }
+                else if (extension == ".jpg" || extension == ".jpeg")
+                {
+                    int size = GetOutputSize();
+                    ImageExporter.SaveJpeg(render(size, Colors.White), path, JpegQuality);
+                    SetLog("已保存 JPG（" + size + "）：\r\n" + path);
+                }
+                else if (extension == ".ico")
                 {
                     List<int> icoSizes = GetSizes(_icoSizeBoxes).ToList();
                     if (icoSizes.Count == 0)
                     {
-                        lines.Add("ICO 已跳过：未选择内嵌尺寸。");
+                        SetLog("ICO 未保存：请至少选择一个内嵌尺寸。");
+                        return;
                     }
-                    else
-                    {
-                        var images = icoSizes.Select(size => PathRenderer.Render(geometry, size, transparent)).ToList();
-                        string path = Path.Combine(directory, baseName + ".ico");
-                        IcoWriter.Save(images, path);
-                        lines.Add(Path.GetFileName(path) + "（" + string.Join(",", icoSizes) + "）");
-                        generated++;
-                    }
+
+                    var images = icoSizes.Select(size => render(size, Colors.Transparent)).ToList();
+                    IcoWriter.Save(images, path);
+                    SetLog("已保存 ICO（" + string.Join(",", icoSizes) + "）：\r\n" + path);
+                }
+                else
+                {
+                    SetLog("不支持的格式，请使用 .png、.jpg 或 .ico 扩展名。");
                 }
             }
             catch (Exception ex)
             {
                 SetLog("生成失败：" + ex.Message);
-                return;
             }
-
-            SetLog("完成，共生成 " + generated + " 个文件：\r\n"
-                + string.Join("\r\n", lines) + "\r\n目录：" + directory);
         }
 
         private Geometry BuildGeometry()
@@ -260,6 +225,17 @@ namespace Path2Ico
                 StrokeThickness = thickness,
                 PaddingRatio = padding
             };
+        }
+
+        private int GetOutputSize()
+        {
+            var item = OutputSizeComboBox.SelectedItem as ComboBoxItem;
+            int size;
+            if (item != null && int.TryParse(item.Tag as string, out size))
+            {
+                return size;
+            }
+            return 256;
         }
 
         private static IEnumerable<int> GetSizes(CheckBox[] boxes)

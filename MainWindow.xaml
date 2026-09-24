@@ -40,10 +40,9 @@
                 <RowDefinition Height="160" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <TextBlock Grid.Row="0" Text="路径数据（SVG d 或 WPF Path mini-language）"
+            <TextBlock Grid.Row="0" Text="路径数据（SVG d / WPF Path mini-language）或 XAML 矢量片段"
                        Margin="0,0,0,4" FontWeight="Bold" />
             <TextBox Grid.Row="1" x:Name="PathTextBox"
                      AcceptsReturn="True" TextWrapping="NoWrap"
@@ -93,35 +92,10 @@
                                Foreground="#FF777777" FontSize="11" Margin="0,6,0,0" />
                 </Grid>
             </GroupBox>
-
-            <GroupBox Grid.Row="4" Header="输出设置" Margin="0,10,0,0" Padding="8">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="输出目录" VerticalAlignment="Center" />
-                    <TextBox Grid.Row="0" Grid.Column="1" x:Name="OutputDirTextBox"
-                             Margin="8,4,8,4" />
-                    <Button Grid.Row="0" Grid.Column="2" Content="浏览..." Width="70" Height="26"
-                            Click="OnBrowseClick" />
-
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="文件名" VerticalAlignment="Center" />
-                    <TextBox Grid.Row="1" Grid.Column="1" x:Name="BaseNameTextBox" Text="icon"
-                             Margin="8,4,8,4" />
-                </Grid>
-            </GroupBox>
         </Grid>
 
         <Grid Grid.Column="2">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -136,30 +110,23 @@
                        RenderOptions.BitmapScalingMode="HighQuality" />
             </Border>
 
-            <GroupBox Grid.Row="1" Header="输出尺寸" Margin="0,10,0,0" Padding="8">
-                <WrapPanel>
-                    <CheckBox x:Name="Size16" Content="16" Tag="16" IsChecked="True" Margin="0,2,12,2" />
-                    <CheckBox x:Name="Size20" Content="20" Tag="20" IsChecked="True" Margin="0,2,12,2" />
-                    <CheckBox x:Name="Size24" Content="24" Tag="24" IsChecked="True" Margin="0,2,12,2" />
-                    <CheckBox x:Name="Size32" Content="32" Tag="32" IsChecked="True" Margin="0,2,12,2" />
-                    <CheckBox x:Name="Size40" Content="40" Tag="40" IsChecked="True" Margin="0,2,12,2" />
-                    <CheckBox x:Name="Size48" Content="48" Tag="48" IsChecked="True" Margin="0,2,12,2" />
-                    <CheckBox x:Name="Size64" Content="64" Tag="64" IsChecked="True" Margin="0,2,12,2" />
-                    <CheckBox x:Name="Size96" Content="96" Tag="96" IsChecked="True" Margin="0,2,12,2" />
-                    <CheckBox x:Name="Size128" Content="128" Tag="128" IsChecked="True" Margin="0,2,12,2" />
-                    <CheckBox x:Name="Size256" Content="256" Tag="256" IsChecked="True" Margin="0,2,12,2" />
-                </WrapPanel>
+            <GroupBox Grid.Row="1" Header="输出尺寸（PNG / JPG）" Margin="0,10,0,0" Padding="8">
+                <ComboBox x:Name="OutputSizeComboBox" SelectedIndex="9"
+                          HorizontalAlignment="Left" Width="120">
+                    <ComboBoxItem Content="16" Tag="16" />
+                    <ComboBoxItem Content="20" Tag="20" />
+                    <ComboBoxItem Content="24" Tag="24" />
+                    <ComboBoxItem Content="32" Tag="32" />
+                    <ComboBoxItem Content="40" Tag="40" />
+                    <ComboBoxItem Content="48" Tag="48" />
+                    <ComboBoxItem Content="64" Tag="64" />
+                    <ComboBoxItem Content="96" Tag="96" />
+                    <ComboBoxItem Content="128" Tag="128" />
+                    <ComboBoxItem Content="256" Tag="256" />
+                </ComboBox>
             </GroupBox>
 
-            <GroupBox Grid.Row="2" Header="输出格式" Margin="0,10,0,0" Padding="8">
-                <StackPanel Orientation="Horizontal">
-                    <CheckBox x:Name="FormatPng" Content="PNG" IsChecked="True" Margin="0,2,16,2" />
-                    <CheckBox x:Name="FormatJpg" Content="JPG" Margin="0,2,16,2" />
-                    <CheckBox x:Name="FormatIco" Content="ICO" IsChecked="True" Margin="0,2,16,2" />
-                </StackPanel>
-            </GroupBox>
-
-            <GroupBox Grid.Row="3" Header="ICO 内嵌尺寸" Margin="0,10,0,0" Padding="8">
+            <GroupBox Grid.Row="2" Header="ICO 内嵌尺寸" Margin="0,10,0,0" Padding="8">
                 <WrapPanel>
                     <CheckBox x:Name="Ico16" Content="16" Tag="16" IsChecked="True" Margin="0,2,12,2" />
                     <CheckBox x:Name="Ico20" Content="20" Tag="20" IsChecked="True" Margin="0,2,12,2" />
@@ -174,10 +141,10 @@
                 </WrapPanel>
             </GroupBox>
 
-            <Button Grid.Row="4" Content="生成并保存" Height="36" Margin="0,12,0,0"
+            <Button Grid.Row="3" Content="生成并保存" Height="36" Margin="0,12,0,0"
                     FontWeight="Bold" Click="OnSaveClick" />
 
-            <GroupBox Grid.Row="5" Header="日志" Margin="0,10,0,0" Padding="6">
+            <GroupBox Grid.Row="4" Header="日志" Margin="0,10,0,0" Padding="6">
                 <TextBox x:Name="LogTextBox" IsReadOnly="True"
                          AcceptsReturn="True" TextWrapping="Wrap"
                          VerticalScrollBarVisibility="Auto"
