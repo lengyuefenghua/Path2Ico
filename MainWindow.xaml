@@ -42,7 +42,7 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <TextBlock Grid.Row="0" Text="路径数据（SVG d / WPF Path mini-language）或 XAML 矢量片段"
+            <TextBlock Grid.Row="0" Text="路径数据（SVG d / WPF Path mini-language）、SVG 或 XAML 矢量片段"
                        Margin="0,0,0,4" FontWeight="Bold" />
             <TextBox Grid.Row="1" x:Name="PathTextBox"
                      AcceptsReturn="True" TextWrapping="NoWrap"

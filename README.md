@@ -4,14 +4,15 @@
 
 ## 功能
 
-- 粘贴 SVG path / WPF Path 语法，或完整的 XAML 矢量片段，实时预览渲染效果
-- 自动识别输入类型：以 `<` 开头视为 XAML 片段，其余按路径数据解析
+- 粘贴 SVG path / WPF Path 语法、完整 SVG 片段，或完整的 XAML 矢量片段，实时预览渲染效果
+- 自动识别输入类型：根元素为 `svg` 时按 SVG 片段处理，其余以 `<` 开头视为 XAML 片段，否则按路径数据解析
 - 路径模式支持填充色、描边色、描边宽度、留白比例设置
 - XAML 片段模式支持多图层、独立填充/描边/透明度/阴影等效果
 - PNG / JPG 通过下拉选择输出尺寸（16 / 20 / 24 / 32 / 40 / 48 / 64 / 96 / 128 / 256）
 - ICO 可勾选多个内嵌尺寸
 - 通过「另存为」对话框导出 PNG（透明背景）/ JPG（白底）/ ICO，一次一种格式
 - 自动将 SVG 圆弧命令等 WPF 不兼容语法进行归一化处理
+- 支持直接粘贴常见 SVG 片段：`svg` / `g` / `rect` / `circle` / `ellipse` / `line` / `polyline` / `polygon` / `path`，以及基础填充、描边、透明度与 `translate` / `scale` / `rotate` / `matrix` / `skew` 变换（暂不支持渐变、`use`、裁剪、遮罩与滤镜）
 
 ## 环境要求
 
@@ -38,7 +39,7 @@ dotnet run
 
    点击「示例」可填入内置的五角星路径。
 
-   也可粘贴完整 XAML 矢量片段（以 `<` 开头），例如包含 `Viewbox`、`Canvas` 与多个 `Path` 的图标；若片段缺少命名空间会自动补全。此模式下「填充色/描边色/描边宽度/留白比例」不生效，样式由片段自身决定；背景色仍用于 PNG（透明）/ JPG（白底）。
+   也可粘贴完整 SVG 片段（根元素为 `<svg>`）或完整 XAML 矢量片段（以 `<` 开头），例如包含 `Viewbox`、`Canvas` 与多个 `Path` 的图标；若片段缺少命名空间会自动补全。此模式下「填充色/描边色/描边宽度/留白比例」不生效，样式由片段自身决定；背景色仍用于 PNG（透明）/ JPG（白底）。
 
 2. 在「样式」中调整填充色、描边色、描边宽度与留白比例（仅路径模式）。
 3. 在「输出尺寸（PNG / JPG）」下拉框选择 PNG / JPG 的输出尺寸；在「ICO 内嵌尺寸」勾选要内嵌的多个尺寸。
@@ -54,6 +55,7 @@ Path2Ico/
 ├─ Services/
 │  ├─ PathRenderer.cs     几何路径渲染为位图
 │  ├─ XamlIconRenderer.cs XAML 矢量片段渲染为位图
+│  ├─ SvgToXamlConverter.cs SVG 片段转换为 XAML
 │  ├─ SvgPathNormalizer.cs SVG path 语法归一化
 │  ├─ ImageExporter.cs    PNG / JPG 导出
 │  └─ IcoWriter.cs        ICO 多尺寸打包

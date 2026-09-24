@@ -31,7 +31,11 @@ namespace Path2Ico.Services
             if (size <= 0) throw new ArgumentOutOfRangeException("size");
             if (settings == null) throw new ArgumentNullException("settings");
 
-            var content = XamlReader.Parse(Normalize(xaml)) as FrameworkElement;
+            string markup = SvgToXamlConverter.LooksLikeSvg(xaml)
+                ? SvgToXamlConverter.Convert(xaml)
+                : Normalize(xaml);
+
+            var content = XamlReader.Parse(markup) as FrameworkElement;
             if (content == null)
             {
                 throw new InvalidOperationException("XAML 片段的根元素不是可视元素。");

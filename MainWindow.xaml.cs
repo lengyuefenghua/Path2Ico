@@ -68,7 +68,7 @@ namespace Path2Ico
                 if (isXaml)
                 {
                     preview = XamlIconRenderer.Render(text, PreviewSize, BuildSettings(Colors.Transparent));
-                    message = "预览已更新（XAML 模式，填充/描边/留白设置已忽略）。";
+                    message = "预览已更新（XAML / SVG 模式，填充/描边/留白设置已忽略）。";
                 }
                 else
                 {
@@ -91,7 +91,7 @@ namespace Path2Ico
             catch (Exception ex)
             {
                 PreviewImage.Source = null;
-                SetLog((isXaml ? "XAML 解析失败：" : "预览失败：") + ex.Message);
+                SetLog((isXaml ? "XAML / SVG 解析失败：" : "预览失败：") + ex.Message);
             }
         }
 
