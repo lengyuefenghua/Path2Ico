@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '版本标签，例如 v1.0.0'
+        required: true
+        default: 'v1.0.0'
 
 permissions:
   contents: write
@@ -28,7 +34,7 @@ jobs:
       - name: Package
         shell: pwsh
         run: |
-          $tag = "${{ github.ref_name }}"
+          $tag = "${{ github.event.inputs.version || github.ref_name }}"
           New-Item -ItemType Directory -Force -Path dist | Out-Null
           Copy-Item src/bin/Release/net472/Path2Ico.exe dist/
           Copy-Item src/bin/Release/net472/Path2Ico.exe.config dist/
@@ -38,5 +44,7 @@ jobs:
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.event.inputs.version || github.ref_name }}
+          name: ${{ github.event.inputs.version || github.ref_name }}
           files: Path2Ico-*-windows.zip
           generate_release_notes: true
