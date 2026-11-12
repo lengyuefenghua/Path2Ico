@@ -5,6 +5,7 @@
     <TargetFramework>net472</TargetFramework>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationIcon>Assets\Path2Ico.ico</ApplicationIcon>
     <AssemblyName>Path2Ico</AssemblyName>
     <RootNamespace>Path2Ico</RootNamespace>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
@@ -12,6 +13,10 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\Path2Ico.ico" />
   </ItemGroup>
 
 </Project>

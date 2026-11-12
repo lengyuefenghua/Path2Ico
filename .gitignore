@@ -3,6 +3,7 @@
 [Oo]bj/
 [Oo]ut/
 output/
+TestResults/
 
 # Visual Studio
 .vs/
@@ -14,9 +15,22 @@ output/
 _ReSharper*/
 *.DotSettings.user
 
+# VS Code / JetBrains
+.vscode/
+.idea/
+
 # NuGet
 *.nupkg
 packages/
+
+# Local build artifacts
+/Path2Ico.exe
+/*.pdb
+/*.log
+
+# Internal Lazy Flow artifacts
+.opencode/
+docs/changes/
 
 # OS
 Thumbs.db

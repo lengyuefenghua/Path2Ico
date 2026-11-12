@@ -13,7 +13,7 @@ namespace Path2Ico
 {
     public partial class MainWindow : Window
     {
-        private const int PreviewSize = 256;
+        private const int PreviewSize = 320;
         private const int JpegQuality = 90;
 
         private const string SamplePath =
@@ -25,6 +25,7 @@ namespace Path2Ico
         public MainWindow()
         {
             InitializeComponent();
+            FitToWorkArea();
 
             _icoSizeBoxes = new[] { Ico16, Ico20, Ico24, Ico32, Ico40, Ico48, Ico64, Ico96, Ico128, Ico256 };
 
@@ -32,6 +33,13 @@ namespace Path2Ico
 
             _ready = true;
             RefreshPreview();
+        }
+
+        private void FitToWorkArea()
+        {
+            Rect workArea = SystemParameters.WorkArea;
+            Width = Math.Min(Width, workArea.Width);
+            Height = Math.Min(Height, workArea.Height);
         }
 
         private void OnTextChanged(object sender, TextChangedEventArgs e)
@@ -64,11 +72,9 @@ namespace Path2Ico
             try
             {
                 BitmapSource preview;
-                string message;
                 if (isXaml)
                 {
                     preview = XamlIconRenderer.Render(text, PreviewSize, BuildSettings(Colors.Transparent));
-                    message = "预览已更新（XAML / SVG 模式，填充/描边/留白设置已忽略）。";
                 }
                 else
                 {
@@ -76,22 +82,17 @@ namespace Path2Ico
                     if (geometry == null)
                     {
                         PreviewImage.Source = null;
-                        SetLog(string.IsNullOrWhiteSpace(text)
-                            ? "请输入路径数据。"
-                            : "路径解析失败，请检查语法。");
                         return;
                     }
                     preview = PathRenderer.Render(geometry, PreviewSize, BuildSettings(Colors.Transparent));
-                    message = "预览已更新。";
                 }
 
                 PreviewImage.Source = preview;
-                SetLog(message);
             }
-            catch (Exception ex)
+            catch
             {
+                // 预览失败时静默清空，避免输入过程中反复弹窗。
                 PreviewImage.Source = null;
-                SetLog((isXaml ? "XAML / SVG 解析失败：" : "预览失败：") + ex.Message);
             }
         }
 
@@ -108,7 +109,7 @@ namespace Path2Ico
                 geometry = BuildGeometry();
                 if (geometry == null)
                 {
-                    SetLog("路径解析失败，无法生成。");
+                    ShowError("路径解析失败，无法生成。");
                     return;
                 }
             }
@@ -139,36 +140,67 @@ namespace Path2Ico
                 {
                     int size = GetOutputSize();
                     ImageExporter.SavePng(render(size, Colors.Transparent), path);
-                    SetLog("已保存 PNG（" + size + "）：\r\n" + path);
                 }
                 else if (extension == ".jpg" || extension == ".jpeg")
                 {
                     int size = GetOutputSize();
                     ImageExporter.SaveJpeg(render(size, Colors.White), path, JpegQuality);
-                    SetLog("已保存 JPG（" + size + "）：\r\n" + path);
                 }
                 else if (extension == ".ico")
                 {
                     List<int> icoSizes = GetSizes(_icoSizeBoxes).ToList();
                     if (icoSizes.Count == 0)
                     {
-                        SetLog("ICO 未保存：请至少选择一个内嵌尺寸。");
+                        ShowError("ICO 未保存：请至少选择一个内嵌尺寸。");
                         return;
                     }
 
                     var images = icoSizes.Select(size => render(size, Colors.Transparent)).ToList();
                     IcoWriter.Save(images, path);
-                    SetLog("已保存 ICO（" + string.Join(",", icoSizes) + "）：\r\n" + path);
                 }
                 else
                 {
-                    SetLog("不支持的格式，请使用 .png、.jpg 或 .ico 扩展名。");
+                    ShowError("不支持的格式，请使用 .png、.jpg 或 .ico 扩展名。");
                 }
             }
             catch (Exception ex)
             {
-                SetLog("生成失败：" + ex.Message);
+                ShowError("生成失败：" + ex.Message);
+                return;
             }
+
+            SaveSvgSidecar(path, isXaml, text, geometry);
+        }
+
+        private void SaveSvgSidecar(string path, bool isXaml, string text, Geometry geometry)
+        {
+            string svgPath = Path.ChangeExtension(path, ".svg");
+            try
+            {
+                if (isXaml)
+                {
+                    if (SvgToXamlConverter.LooksLikeSvg(text))
+                    {
+                        SvgExporter.SaveOriginal(text, svgPath);
+                    }
+                    else
+                    {
+                        ShowError("XAML 片段暂不支持导出 SVG，已保存图像文件。");
+                    }
+                    return;
+                }
+
+                SvgExporter.SaveFromPath(geometry, BuildSettings(Colors.Transparent), svgPath);
+            }
+            catch (Exception ex)
+            {
+                ShowError("图像已保存，但 SVG 写入失败：" + ex.Message);
+            }
+        }
+
+        private void ShowError(string message)
+        {
+            MessageBox.Show(this, message, "Path2Ico", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
         private Geometry BuildGeometry()
@@ -272,11 +304,6 @@ namespace Path2Ico
             {
             }
             return false;
-        }
-
-        private void SetLog(string message)
-        {
-            LogTextBox.Text = message;
         }
     }
 }
