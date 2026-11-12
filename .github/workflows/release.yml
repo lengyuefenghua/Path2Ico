@@ -42,10 +42,38 @@ jobs:
           Copy-Item LICENSE dist/
           Compress-Archive -Path dist/* -DestinationPath "Path2Ico-$tag-windows.zip"
 
+      - name: Prepare release notes
+        shell: pwsh
+        run: |
+          $tag = "${{ github.event.inputs.version || github.ref_name }}"
+          $lines = Get-Content CHANGELOG.md
+          $escaped = [regex]::Escape($tag)
+          $start = -1
+          for ($i = 0; $i -lt $lines.Count; $i++) {
+            if ($lines[$i] -match "^##\s+$escaped\s*$") {
+              $start = $i
+              break
+            }
+          }
+          $body = @()
+          if ($start -ge 0) {
+            for ($i = $start + 1; $i -lt $lines.Count; $i++) {
+              if ($lines[$i] -match '^##\s+') {
+                break
+              }
+              $body += $lines[$i]
+            }
+          }
+          if ($body.Count -eq 0) {
+            $body = @("Full Changelog: https://github.com/${{ github.repository }}/commits/$tag")
+          }
+          Set-Content -Path release-body.md -Value $body -Encoding UTF8
+
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.inputs.version || github.ref_name }}
           name: ${{ github.event.inputs.version || github.ref_name }}
+          body_path: release-body.md
           files: Path2Ico-*-windows.zip
-          generate_release_notes: true
+          generate_release_notes: false

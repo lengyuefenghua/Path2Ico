@@ -45,7 +45,7 @@ Release 产物位于 `src/bin/Release/net472/Path2Ico.exe`。`dotnet run` 默认
 
 ## 发布
 
-推送 `v*` 标签会自动创建 GitHub Release，并附上 Windows 构建包：
+推送 `v*` 标签会自动创建 GitHub Release，并附上 Windows 构建包。发版前先在 `CHANGELOG.md` 增加当前版本段落，Release 正文会自动提取。
 
 ```powershell
 git tag v1.0.0
