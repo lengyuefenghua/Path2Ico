@@ -43,6 +43,15 @@ dotnet run --project src/Path2Ico.csproj
 
 Release 产物位于 `src/bin/Release/net472/Path2Ico.exe`。`dotnet run` 默认使用 Debug 配置。
 
+## 发布
+
+推送 `v*` 标签会自动创建 GitHub Release，并附上 Windows 构建包：
+
+```powershell
+git tag v1.0.0
+git push origin v1.0.0
+```
+
 ## 使用说明
 
 1. 在左侧文本框输入路径数据，例如：
