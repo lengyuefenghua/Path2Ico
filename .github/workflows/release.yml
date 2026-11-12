@@ -38,7 +38,8 @@ jobs:
           New-Item -ItemType Directory -Force -Path dist | Out-Null
           Copy-Item src/bin/Release/net472/Path2Ico.exe dist/
           Copy-Item src/bin/Release/net472/Path2Ico.exe.config dist/
-          Copy-Item README.md LICENSE dist/
+          Copy-Item README.md dist/
+          Copy-Item LICENSE dist/
           Compress-Archive -Path dist/* -DestinationPath "Path2Ico-$tag-windows.zip"
 
       - name: Create release
