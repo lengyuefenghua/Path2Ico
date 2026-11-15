@@ -8,13 +8,21 @@ using System.Windows.Media;
 namespace Path2Ico.Services
 {
     /// <summary>
-    /// Writes a same-name SVG sidecar next to an exported image. Path mode is
-    /// rebuilt from the geometry and current render settings so the SVG matches
-    /// the preview; SVG input is stored as-is.
+    /// Writes same-name sidecar files next to an exported image: the source text
+    /// as-is for XAML fragments, and a rebuilt SVG for path mode.
     /// </summary>
     public static class SvgExporter
     {
         private const int CanvasSize = 256;
+
+        /// <summary>
+        /// 原样保存片段源码，供用户二次编辑。使用 UTF-8 无 BOM，避免部分编辑器出现多余字符。
+        /// </summary>
+        public static void SaveSource(string text, string path)
+        {
+            if (text == null) throw new ArgumentNullException("text");
+            File.WriteAllText(path, text, new UTF8Encoding(false));
+        }
 
         public static void SaveFromPath(Geometry geometry, RenderSettings settings, string path)
         {
@@ -47,12 +55,6 @@ namespace Path2Ico.Services
             svg.Append("</svg>\n");
 
             File.WriteAllText(path, svg.ToString(), new UTF8Encoding(false));
-        }
-
-        public static void SaveOriginal(string svg, string path)
-        {
-            if (string.IsNullOrWhiteSpace(svg)) throw new ArgumentException("svg");
-            File.WriteAllText(path, svg, new UTF8Encoding(false));
         }
 
         private static void AppendFill(StringBuilder svg, Geometry geometry, RenderSettings settings)

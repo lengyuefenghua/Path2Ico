@@ -16,6 +16,9 @@ namespace Path2Ico
         private const int PreviewSize = 320;
         private const int JpegQuality = 90;
 
+        private const string SourceHintText = "仅支持 Path 数据与 XAML Path 片段；完整 <svg> 片段不再支持。";
+        private const string SvgHintText = "不支持完整 <svg> 片段，请改用 Path 数据或 XAML Path 片段。";
+
         private const string SamplePath =
             "M 50,5 L 61,38 L 95,38 L 67,59 L 78,92 L 50,71 L 22,92 L 33,59 L 5,38 L 39,38 Z";
 
@@ -67,6 +70,15 @@ namespace Path2Ico
             if (!_ready) return;
 
             string text = PathTextBox.Text;
+            bool isSvg = XamlIconRenderer.LooksLikeSvgRoot(text);
+            UpdateSourceHint(isSvg);
+
+            if (isSvg)
+            {
+                PreviewImage.Source = null;
+                return;
+            }
+
             bool isXaml = XamlIconRenderer.LooksLikeXaml(text);
 
             try
@@ -96,11 +108,28 @@ namespace Path2Ico
             }
         }
 
+        /// <summary>
+        /// 提示行常驻显示支持范围；检测到 svg 根元素时转为错误色，说明预览为空的原因。
+        /// </summary>
+        private void UpdateSourceHint(bool svgInput)
+        {
+            SourceHint.Text = svgInput ? SvgHintText : SourceHintText;
+            SourceHint.Foreground = svgInput
+                ? (Brush)FindResource("ErrorTextBrush")
+                : (Brush)FindResource("TextSecondaryBrush");
+        }
+
         private void OnSaveClick(object sender, RoutedEventArgs e)
         {
             if (!_ready) return;
 
             string text = PathTextBox.Text;
+            if (XamlIconRenderer.LooksLikeSvgRoot(text))
+            {
+                ShowError(SvgHintText);
+                return;
+            }
+
             bool isXaml = XamlIconRenderer.LooksLikeXaml(text);
 
             Geometry geometry = null;
@@ -169,32 +198,41 @@ namespace Path2Ico
                 return;
             }
 
-            SaveSvgSidecar(path, isXaml, text, geometry);
+            SaveSourceSidecar(path, isXaml, text, geometry);
         }
 
-        private void SaveSvgSidecar(string path, bool isXaml, string text, Geometry geometry)
+        /// <summary>
+        /// 落盘可直接二次编辑的源文件：XAML 片段原样存为 .xaml，路径模式按当前样式重建 .svg。
+        /// </summary>
+        private void SaveSourceSidecar(string path, bool isXaml, string text, Geometry geometry)
         {
-            string svgPath = Path.ChangeExtension(path, ".svg");
             try
             {
                 if (isXaml)
                 {
-                    if (SvgToXamlConverter.LooksLikeSvg(text))
+                    string xamlPath = Path.ChangeExtension(path, ".xaml");
+                    if (File.Exists(xamlPath) && File.ReadAllText(xamlPath) != text)
                     {
-                        SvgExporter.SaveOriginal(text, svgPath);
+                        // .xaml 是用户可能手工编辑的源文件，内容不同才确认覆盖，默认不覆盖。
+                        MessageBoxResult result = MessageBox.Show(
+                            this,
+                            "同名 .xaml 已存在且内容不同，是否覆盖？\n" + xamlPath,
+                            "Path2Ico",
+                            MessageBoxButton.YesNo,
+                            MessageBoxImage.Question,
+                            MessageBoxResult.No);
+                        if (result != MessageBoxResult.Yes) return;
                     }
-                    else
-                    {
-                        ShowError("XAML 片段暂不支持导出 SVG，已保存图像文件。");
-                    }
+
+                    SvgExporter.SaveSource(text, xamlPath);
                     return;
                 }
 
-                SvgExporter.SaveFromPath(geometry, BuildSettings(Colors.Transparent), svgPath);
+                SvgExporter.SaveFromPath(geometry, BuildSettings(Colors.Transparent), Path.ChangeExtension(path, ".svg"));
             }
             catch (Exception ex)
             {
-                ShowError("图像已保存，但 SVG 写入失败：" + ex.Message);
+                ShowError("图像已保存，但源文件写入失败：" + ex.Message);
             }
         }
 

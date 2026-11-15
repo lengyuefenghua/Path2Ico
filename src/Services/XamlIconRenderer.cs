@@ -25,15 +25,37 @@ namespace Path2Ico.Services
             return trimmed.Length > 0 && trimmed[0] == '<';
         }
 
+        /// <summary>
+        /// 判断片段根元素是否为 svg。会跳过 XML 声明与注释，因此从 SVG 文件整份复制的内容也能识别。
+        /// </summary>
+        public static bool LooksLikeSvgRoot(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return false;
+
+            int tagStart = FindRootTagStart(text);
+            if (tagStart < 0) return false;
+
+            int i = tagStart + 1;
+            int nameStart = i;
+            while (i < text.Length && !char.IsWhiteSpace(text[i]) && text[i] != '>' && text[i] != '/')
+            {
+                i++;
+            }
+            if (i == nameStart) return false;
+
+            string name = text.Substring(nameStart, i - nameStart);
+            int colon = name.LastIndexOf(':');
+            if (colon >= 0) name = name.Substring(colon + 1);
+            return string.Equals(name, "svg", StringComparison.OrdinalIgnoreCase);
+        }
+
         public static BitmapSource Render(string xaml, int size, RenderSettings settings)
         {
             if (string.IsNullOrWhiteSpace(xaml)) throw new ArgumentException("xaml");
             if (size <= 0) throw new ArgumentOutOfRangeException("size");
             if (settings == null) throw new ArgumentNullException("settings");
 
-            string markup = SvgToXamlConverter.LooksLikeSvg(xaml)
-                ? SvgToXamlConverter.Convert(xaml)
-                : Normalize(xaml);
+            string markup = Normalize(xaml);
 
             var content = XamlReader.Parse(markup) as FrameworkElement;
             if (content == null)

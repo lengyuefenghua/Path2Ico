@@ -2,30 +2,30 @@
 
 # Path2Ico
 
-将矢量路径数据（SVG `d` 或 WPF Path mini-language）或完整 XAML / SVG 矢量片段渲染并导出为 **PNG / JPG / ICO** 图标文件的 Windows 桌面工具。
+将矢量路径数据（SVG `d` 或 WPF Path mini-language）或完整 XAML 矢量片段渲染并导出为 **PNG / JPG / ICO** 图标文件的 Windows 桌面工具。
 
 [![build](https://github.com/lengyuefenghua/Path2Ico/actions/workflows/build.yml/badge.svg)](https://github.com/lengyuefenghua/Path2Ico/actions/workflows/build.yml)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ## 功能
 
-- 粘贴 SVG path / WPF Path 语法、完整 SVG 片段，或完整的 XAML 矢量片段，实时预览渲染效果
-- 自动识别输入类型：根元素为 `svg` 时按 SVG 片段处理，其余以 `<` 开头视为 XAML 片段，否则按路径数据解析
+- 粘贴 SVG path / WPF Path 语法，或完整的 XAML 矢量片段，实时预览渲染效果
+- 自动识别输入类型：以 `<` 开头视为 XAML 片段，否则按路径数据解析
 - 路径模式支持填充色、描边色、描边宽度、留白比例设置
-- XAML 片段模式支持多图层、独立填充/描边/透明度/阴影等效果
+- XAML 片段模式支持多图层、独立填充/描边/透明度/渐变/阴影等效果，渲染与 WPF 一致
 - PNG / JPG 通过下拉选择输出尺寸（16 / 20 / 24 / 32 / 40 / 48 / 64 / 96 / 128 / 256）
 - ICO 可勾选多个内嵌尺寸
-- 保存 PNG / JPG / ICO 时，同目录生成同名 SVG；路径模式按当前样式与留白重建，SVG 输入原样保存
+- 保存 PNG / JPG / ICO 时同目录生成同名源文件：路径模式按当前样式与留白重建 `.svg`，XAML 片段原样存为 `.xaml`
 - 通过「另存为」对话框导出 PNG（透明背景）/ JPG（白底）/ ICO，一次一种格式
-- 自动将 SVG 圆弧命令等 WPF 不兼容语法进行归一化处理
-- 支持常见 SVG 片段：`svg` / `g` / `rect` / `circle` / `ellipse` / `line` / `polyline` / `polygon` / `path`，以及基础填充、描边、透明度与 `translate` / `scale` / `rotate` / `matrix` / `skew` 变换
+- 自动将 Path 数据中的 SVG 圆弧命令等 WPF 不兼容语法进行归一化处理
 
 ## 支持范围与已知限制
 
-- SVG 片段仅支持上述元素和基础表现属性；暂不支持渐变、`use`、裁剪、遮罩与滤镜。
-- XAML / SVG 片段模式会忽略「填充色 / 描边色 / 描边宽度 / 留白比例」，样式由片段自身决定。
-- XAML 片段暂不生成 SVG 伴随文件，保存时会提示并仅输出图像。
-- 每次保存选择一种图像格式，并生成同名 SVG（路径 / SVG 输入）。
+- 不支持完整 `<svg>` 片段：粘贴后源码区会提示，预览留空。需要 SVG 图标请先转换为 XAML 片段（`Canvas` / `Path` 等 WPF 元素）。
+- XAML 片段模式会忽略「填充色 / 描边色 / 描边宽度 / 留白比例」，样式由片段自身决定。
+- XAML 片段仅支持纯声明式 XAML：不能包含事件处理器、`x:Class`、`{x:Static}` 或自定义标记扩展。
+- XAML 片段原样存为同名 `.xaml`，缺失的命名空间不会被补写；若目标文件已存在且内容不同，会先确认是否覆盖。
+- 每次保存选择一种图像格式，并生成同名源文件（`.svg` 或 `.xaml`）。
 - 仅支持 Windows。
 
 ## 环境要求
@@ -62,12 +62,12 @@ git push origin v1.0.0
 
    点击「载入示例」可填入内置的五角星路径。
 
-   也可粘贴完整 SVG 片段（根元素为 `<svg>`）或完整 XAML 矢量片段（以 `<` 开头），例如包含 `Viewbox`、`Canvas` 与多个 `Path` 的图标；若片段缺少命名空间会自动补全。
+   也可粘贴完整 XAML 矢量片段（以 `<` 开头），例如包含 `Viewbox`、`Canvas` 与多个 `Path` 的图标；若片段缺少命名空间会自动补全。渐变、阴影等效果按 WPF 语义渲染。
 
 2. 在「样式」中调整填充色、描边色、描边宽度与留白比例（仅路径模式）。
 3. 在「输出」中选择 PNG / JPG 的输出尺寸，并勾选 ICO 要内嵌的多个尺寸。
 4. 点击「生成并保存」，在弹出的「另存为」对话框中输入文件名并选择格式（`.png` / `.jpg` / `.ico`）；默认不预填文件名、目录与扩展名。
-5. 每次保存图像后，会在同目录写入同名 `.svg`；XAML 片段会跳过 SVG 并弹出提示；成功保存后不会额外弹窗。
+5. 每次保存图像后，会在同目录写入同名源文件：路径模式写 `.svg`，XAML 片段写 `.xaml`；成功后不会额外弹窗。
 
 ## 项目结构
 
@@ -84,8 +84,7 @@ Path2Ico/
 │  ├─ Services/
 │  │  ├─ PathRenderer.cs        几何路径渲染为位图
 │  │  ├─ XamlIconRenderer.cs    XAML 矢量片段渲染为位图
-│  │  ├─ SvgToXamlConverter.cs  SVG 片段转换为 XAML
-│  │  ├─ SvgPathNormalizer.cs   SVG path 语法归一化
+│  │  ├─ SvgPathNormalizer.cs   Path 数据语法归一化
 │  │  ├─ ImageExporter.cs       PNG / JPG 导出
 │  │  ├─ SvgExporter.cs         SVG 伴随文件生成
 │  │  └─ IcoWriter.cs           ICO 多尺寸打包

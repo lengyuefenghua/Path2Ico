@@ -27,6 +27,7 @@
         <SolidColorBrush x:Key="NeutralPressedBrush" Color="#E2E8F0" />
         <SolidColorBrush x:Key="DisabledBackgroundBrush" Color="#CBD5E1" />
         <SolidColorBrush x:Key="DisabledTextBrush" Color="#94A3B8" />
+        <SolidColorBrush x:Key="ErrorTextBrush" Color="#DC2626" />
 
         <!-- 透明预览棋盘格 -->
         <DrawingBrush x:Key="CheckerBrush" TileMode="Tile"
@@ -464,6 +465,7 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
 
                             <Grid Grid.Row="0" Margin="0,0,0,10">
@@ -474,7 +476,7 @@
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Text="矢量源码" Style="{StaticResource SectionTitleStyle}"
                                            VerticalAlignment="Center" />
-                                <TextBlock Grid.Column="1" Text="SVG / XAML / Path d"
+                                <TextBlock Grid.Column="1" Text="XAML / Path d"
                                            Style="{StaticResource HintTextStyle}"
                                            VerticalAlignment="Center" Margin="12,0,0,0" />
                                 <StackPanel Grid.Column="2" Orientation="Horizontal">
@@ -498,6 +500,11 @@
                                      FontSize="13"
                                      Style="{StaticResource InputTextBoxStyle}"
                                      TextChanged="OnTextChanged" />
+
+                            <TextBlock Grid.Row="2"
+                                       x:Name="SourceHint"
+                                       Style="{StaticResource HintTextStyle}"
+                                       Margin="2,8,0,0" />
                         </Grid>
                     </Border>
 
